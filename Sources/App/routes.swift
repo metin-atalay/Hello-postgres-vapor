@@ -23,7 +23,7 @@ func routes(_ app: Application) throws {
             .flatMap {
                 $0.title = movie.title
                 return $0.update(on: req.db).transform(to: .ok)
-        }
+            }
         
     }
     
@@ -40,7 +40,7 @@ func routes(_ app: Application) throws {
     
     
     app.post("movies") { req -> EventLoopFuture<Movie> in
-
+        
         let movie = try req.content.decode(Movie.self)
         return movie.create(on: req.db).map { movie }
         
@@ -52,5 +52,38 @@ func routes(_ app: Application) throws {
         let review = try req.content.decode(Review.self)
         return review.create(on: req.db).map { review }
     }
+    
+    app.post("actors") { req -> EventLoopFuture<Actor> in
+        
+        let actor = try req.content.decode(Actor.self)
+        
+        return actor.create(on: req.db).map {   actor  }
+        
+    }
+    
+    
+    // movie/:movieId/actor/:actorId
+    app.post("movie",":movieId","actor",":actorId") { req -> EventLoopFuture<HTTPStatus> in
+        
+        // get the movie
+        let movie = Movie.find(req.parameters.get("movieId"), on: req.db)
+            .unwrap(or: Abort(.notFound))
+        
+        // get the actor
+        let actor = Actor.find(req.parameters.get("actorId"), on: req.db)
+            .unwrap(or: Abort(.notFound))
+        
+        return movie.and(actor).flatMap { (movie, actor) in
+            movie.$actors.attach(actor, on: req.db)
+        }.transform(to: .ok)
+        
+    }
+    
+    
+    // /movies™
+    app.get("movies") { req in
+        Movie.query(on: req.db).with(\.$actors).with(\.$reviews).all()
+    }
+    
     
 }

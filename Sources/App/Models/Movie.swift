@@ -17,6 +17,9 @@ final class Movie: Model, Content {
     @Children(for: \.$movie)
     var reviews: [Review]
     
+    @Siblings(through: MovieActor.self, from: \.$movie, to: \.$actor)
+    var actors: [Actor]
+    
     init() {}
     
     init(id: UUID? = nil, title: String) {
