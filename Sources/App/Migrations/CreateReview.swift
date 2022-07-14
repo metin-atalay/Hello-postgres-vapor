@@ -13,7 +13,7 @@ struct CreateReview: AsyncMigration {
             .id()
             .field("title", .string)
             .field("body", .string)
-            .field("move_id", .uuid, .references("movies", "id"))
+            .field("movie_id", .uuid, .references("movies", "id"))
             .create()
     }
     
